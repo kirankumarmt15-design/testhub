@@ -1,0 +1,17 @@
+{
+  "login": {
+    "url": "http://202.83.16.221:9007",
+    "email": "pradeep@gmail.com",
+    "password": "Pradeep@1234"
+  },
+  "patient": {
+    "name": "John Patient",
+    "address": "Bangalore",
+    "gender": "male",
+    "birthDate": "2010-06-05",
+    "bloodGroup": "B+"
+  },
+  "appointment": {
+    "date": "2026-06-10"
+  }
+}
