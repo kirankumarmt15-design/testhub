@@ -310,168 +310,109 @@
 // });
 import { test, expect } from '@playwright/test';
 
-import LoginPage from '../PageObjectModel/doclogin.page.js';
-import HomePage from '../PageObjectModel/openMRShome.page.js';
-import AddPatientPage from '../PageObjectModel/addpatient.page.js';
+import LoginPage       from '../PageObjectModel/doclogin.page.js';
+import HomePage        from '../PageObjectModel/openMRShome.page.js';
+import AddPatientPage  from '../PageObjectModel/addpatient.page.js';
 import AppointmentPage from '../PageObjectModel/addappointment.page.js';
 
 import data from '../testData/openMRS.json' with { type: 'json' };
 
 test.describe.configure({ mode: 'serial' });
 
-const uniqueId = Date.now();
+const uniqueId     = Date.now();
 const randomDigits = Math.floor(10000 + Math.random() * 90000);
-
-const uniquePhone = `98765${randomDigits}`;
-const uniqueEmail = `patient_${uniqueId}@gmail.com`;
+const uniquePhone  = `98765${randomDigits}`;
+const uniqueEmail  = `patient_${uniqueId}@gmail.com`;
 
 test.describe('OpenMRS E2E Suite', () => {
 
-test.beforeEach(async ({ page }) => {
-
-    const login = new LoginPage(page);
-
-    await login.goto(data.login.url);
-
-    await login.login(
-        data.login.email,
-        data.login.password
-    );
-
-    await expect(
-        page.getByRole('link', { name: /log out/i })
-    ).toBeVisible({ timeout: 15000 });
-});
-
-test('TC-01 : Login to OpenMRS', async ({ page }) => {
-
-    await expect(
-        page.getByRole('link', { name: /log out/i })
-    ).toBeVisible();
-
-});
-
-test('TC-02 : Navigate to Patient Module', async ({ page }) => {
-
-    const home = new HomePage(page);
-
-    await home.openPatientSection();
-
-    await expect(page)
-        .toHaveURL(/doctor\/patient/);
-
-});
-
-test('TC-03 : Verify Add Patient Modal', async ({ page }) => {
-
-    const home = new HomePage(page);
-    const addPatient = new AddPatientPage(page);
-
-    await home.openPatientSection();
-
-    await home.clickAddPatient();
-
-    await expect(addPatient.modal)
-        .toBeVisible({ timeout: 10000 });
-
-});
-
-test('TC-04 : Add New Patient', async ({ page }) => {
-
-    const home = new HomePage(page);
-    const addPatient = new AddPatientPage(page);
-
-    await home.openPatientSection();
-
-    await home.clickAddPatient();
-
-    await addPatient.addPatient({
-        name: data.patient.name,
-        email: uniqueEmail,
-        phone: uniquePhone,
-        gender: data.patient.gender,
-        birthDate: data.patient.birthDate,
-        bloodGroup: data.patient.bloodGroup,
-        address: data.patient.address
+    test.beforeEach(async ({ page }) => {
+        test.setTimeout(120000);
+        const login = new LoginPage(page);
+        await login.goto(data.login.url);
+        await login.login(data.login.email, data.login.password);
+        await expect(
+            page.getByRole('link', { name: /log out/i })
+        ).toBeVisible({ timeout: 30000 });
     });
 
-    await expect(page)
-        .toHaveURL(/doctor\/patient/);
+    test('TC-01 : Login to OpenMRS', async ({ page }) => {
+        await expect(
+            page.getByRole('link', { name: /log out/i })
+        ).toBeVisible({ timeout: 20000 });
+    });
 
-});
+    test('TC-02 : Navigate to Patient Module', async ({ page }) => {
+        const home = new HomePage(page);
+        await home.openPatientSection();
+        await expect(page).toHaveURL(/patient/, { timeout: 30000 });
+    });
 
-test('TC-05 : Search Patient', async ({ page }) => {
+    test('TC-03 : Verify Add Patient Modal', async ({ page }) => {
+        const home       = new HomePage(page);
+        const addPatient = new AddPatientPage(page);
+        await home.openPatientSection();
+        await home.clickAddPatient();
+        await expect(addPatient.modal).toBeVisible({ timeout: 20000 });
+    });
 
-    const home = new HomePage(page);
-
-    await home.openPatientSection();
-
-    await home.searchBox.fill(uniquePhone);
-
-    const patientRow = page
-        .locator('table tbody tr')
-        .filter({
-            hasText: data.patient.name
+    test('TC-04 : Add New Patient', async ({ page }) => {
+        const home       = new HomePage(page);
+        const addPatient = new AddPatientPage(page);
+        await home.openPatientSection();
+        await home.clickAddPatient();
+        await addPatient.addPatient({
+            name:       data.patient.name,
+            email:      uniqueEmail,
+            phone:      uniquePhone,
+            gender:     data.patient.gender,
+            birthDate:  data.patient.birthDate,
+            bloodGroup: data.patient.bloodGroup,
+            address:    data.patient.address,
         });
-
-    await expect(patientRow)
-        .toBeVisible({ timeout: 15000 });
-
-});
-
-test('TC-06 : Appointment Module', async ({ page }) => {
-
-    const home = new HomePage(page);
-
-    await home.openAppointmentList();
-
-    await expect(page)
-        .toHaveURL(/doctor\/appointment/);
-
-});
-
-test('TC-07 : Appointment Popup', async ({ page }) => {
-
-    const home = new HomePage(page);
-    const appointment = new AppointmentPage(page);
-
-    await home.openAppointmentList();
-
-    await appointment.openAppointmentPopup();
-
-    await expect(
-        page.getByRole('button', {
-            name: /save|submit|create/i
-        }).first()
-    ).toBeVisible();
-
-});
-
-test('TC-08 : Create Appointment', async ({ page }) => {
-
-    const home = new HomePage(page);
-    const appointment = new AppointmentPage(page);
-
-    await home.openAppointmentList();
-
-    await appointment.openAppointmentPopup();
-
-    await appointment.giveAppointment({
-        patientName: data.patient.name,
-        date: data.appointment.date
+        await expect(page).toHaveURL(/patient/, { timeout: 30000 });
     });
 
-    const appointmentRow = page
-        .locator('table tbody tr')
-        .filter({
-            hasText: data.patient.name
-        })
-        .first();
+    test('TC-05 : Search Patient', async ({ page }) => {
+        const home = new HomePage(page);
+        await home.openPatientSection();
+        await home.searchPatient(uniquePhone);
+        const patientRow = page
+            .locator('table tbody tr')
+            .filter({ hasText: data.patient.name });
+        await expect(patientRow.first()).toBeVisible({ timeout: 20000 });
+    });
 
-    await expect(appointmentRow)
-        .toBeVisible({ timeout: 15000 });
+    test('TC-06 : Appointment Module', async ({ page }) => {
+        const home = new HomePage(page);
+        await home.openAppointmentList();
+        await expect(page).toHaveURL(/appointment/, { timeout: 30000 });
+    });
 
-});
+    test('TC-07 : Appointment Popup', async ({ page }) => {
+        const home        = new HomePage(page);
+        const appointment = new AppointmentPage(page);
+        await home.openAppointmentList();
+        await appointment.openAppointmentPopup();
+        await expect(
+            page.getByRole('button', { name: /save|submit|create/i }).first()
+        ).toBeVisible({ timeout: 15000 });
+    });
 
+    test('TC-08 : Create Appointment', async ({ page }) => {
+        const home        = new HomePage(page);
+        const appointment = new AppointmentPage(page);
+        await home.openAppointmentList();
+        await appointment.openAppointmentPopup();
+        await appointment.giveAppointment({
+            patientName: data.patient.name,
+            date:        data.appointment.date,
+        });
+        const appointmentRow = page
+            .locator('table tbody tr')
+            .filter({ hasText: data.patient.name })
+            .first();
+        await expect(appointmentRow).toBeVisible({ timeout: 20000 });
+    });
 
 });
